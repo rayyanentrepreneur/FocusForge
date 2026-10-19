@@ -1,0 +1,129 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Default Deny Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Health / Connection Test probe
+    match /test/connection {
+      allow read: if true;
+    }
+
+    // Hardened Primitives
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidTask(data) {
+      return data.id is string && isValidId(data.id) &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 200 &&
+             data.subject is string && data.subject.size() >= 1 && data.subject.size() <= 60 &&
+             data.priority in ['low', 'medium', 'high'] &&
+             data.estimatedDuration is number && data.estimatedDuration >= 1 && data.estimatedDuration <= 1440 &&
+             data.completed is bool &&
+             data.createdAt is string && data.createdAt.size() <= 50 &&
+             (!('deadline' in data) || (data.deadline is string && data.deadline.size() <= 30)) &&
+             (!('completedAt' in data) || (data.completedAt is string && data.completedAt.size() <= 50)) &&
+             (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 50));
+    }
+
+    function isValidSession(data) {
+      return data.id is string && isValidId(data.id) &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.startTime is string && data.startTime.size() <= 50 &&
+             data.endTime is string && data.endTime.size() <= 50 &&
+             data.durationMinutes is number && data.durationMinutes >= 0 && data.durationMinutes <= 1440 &&
+             data.subject is string && data.subject.size() >= 1 && data.subject.size() <= 60 &&
+             data.completed is bool &&
+             data.mode in ['focus', 'short_break', 'long_break'] &&
+             (!('taskId' in data) || (data.taskId is string && data.taskId.size() <= 128)) &&
+             (!('taskTitle' in data) || (data.taskTitle is string && data.taskTitle.size() <= 200)) &&
+             (!('distractions' in data) || (data.distractions is list && data.distractions.size() <= 100));
+    }
+
+    function isValidSettings(data) {
+      return data.userId is string && data.userId == request.auth.uid &&
+             data.studentName is string && data.studentName.size() >= 1 && data.studentName.size() <= 60 &&
+             data.dailyGoalMinutes is number && data.dailyGoalMinutes >= 1 && data.dailyGoalMinutes <= 1440 &&
+             data.focusDurationMinutes is number && data.focusDurationMinutes >= 1 && data.focusDurationMinutes <= 180 &&
+             data.shortBreakMinutes is number && data.shortBreakMinutes >= 1 && data.shortBreakMinutes <= 60 &&
+             data.longBreakMinutes is number && data.longBreakMinutes >= 1 && data.longBreakMinutes <= 90 &&
+             data.soundEnabled is bool &&
+             data.theme in ['dark', 'light'] &&
+             (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 50));
+    }
+
+    // User data hierarchy
+    match /users/{userId} {
+      allow read, write: if isOwner(userId) && isValidId(userId);
+
+      // Tasks Subcollection
+      match /tasks/{taskId} {
+        allow get, delete: if isOwner(userId) && isValidId(userId) && isValidId(taskId);
+        allow list: if isOwner(userId) && isValidId(userId);
+        allow create: if isOwner(userId) && isValidId(userId) && isValidId(taskId)
+                      && incoming().id == taskId
+                      && isValidTask(incoming())
+                      && incoming().keys().hasAll(['id', 'title', 'subject', 'priority', 'estimatedDuration', 'completed', 'createdAt', 'userId'])
+                      && incoming().keys().hasOnly(['id', 'title', 'subject', 'priority', 'estimatedDuration', 'deadline', 'completed', 'completedAt', 'createdAt', 'updatedAt', 'userId']);
+        allow update: if isOwner(userId) && isValidId(userId) && isValidId(taskId)
+                      && isValidTask(incoming())
+                      && incoming().id == existing().id
+                      && incoming().userId == existing().userId
+                      && incoming().createdAt == existing().createdAt
+                      && incoming().diff(existing()).affectedKeys().hasOnly(['title', 'subject', 'priority', 'estimatedDuration', 'deadline', 'completed', 'completedAt', 'updatedAt']);
+      }
+
+      // Focus Sessions Subcollection
+      match /sessions/{sessionId} {
+        allow get, delete: if isOwner(userId) && isValidId(userId) && isValidId(sessionId);
+        allow list: if isOwner(userId) && isValidId(userId);
+        allow create: if isOwner(userId) && isValidId(userId) && isValidId(sessionId)
+                      && incoming().id == sessionId
+                      && isValidSession(incoming())
+                      && incoming().keys().hasAll(['id', 'startTime', 'endTime', 'durationMinutes', 'subject', 'completed', 'mode', 'userId'])
+                      && incoming().keys().hasOnly(['id', 'startTime', 'endTime', 'durationMinutes', 'subject', 'taskId', 'taskTitle', 'distractions', 'completed', 'mode', 'userId']);
+        allow update: if isOwner(userId) && isValidId(userId) && isValidId(sessionId)
+                      && isValidSession(incoming())
+                      && incoming().id == existing().id
+                      && incoming().userId == existing().userId
+                      && incoming().startTime == existing().startTime
+                      && incoming().diff(existing()).affectedKeys().hasOnly(['endTime', 'durationMinutes', 'subject', 'taskId', 'taskTitle', 'distractions', 'completed', 'mode']);
+      }
+
+      // Settings Subcollection
+      match /settings/{settingId} {
+        allow get, delete: if isOwner(userId) && isValidId(userId) && isValidId(settingId);
+        allow list: if isOwner(userId) && isValidId(userId);
+        allow create: if isOwner(userId) && isValidId(userId) && isValidId(settingId)
+                      && isValidSettings(incoming())
+                      && incoming().keys().hasAll(['studentName', 'dailyGoalMinutes', 'focusDurationMinutes', 'shortBreakMinutes', 'longBreakMinutes', 'soundEnabled', 'theme', 'userId'])
+                      && incoming().keys().hasOnly(['studentName', 'dailyGoalMinutes', 'focusDurationMinutes', 'shortBreakMinutes', 'longBreakMinutes', 'longBreakInterval', 'soundEnabled', 'notificationsEnabled', 'autoStartBreak', 'autoStartFocus', 'theme', 'onboarded', 'userId', 'updatedAt']);
+        allow update: if isOwner(userId) && isValidId(userId) && isValidId(settingId)
+                      && isValidSettings(incoming())
+                      && incoming().userId == existing().userId
+                      && incoming().diff(existing()).affectedKeys().hasOnly(['studentName', 'dailyGoalMinutes', 'focusDurationMinutes', 'shortBreakMinutes', 'longBreakMinutes', 'longBreakInterval', 'soundEnabled', 'notificationsEnabled', 'autoStartBreak', 'autoStartFocus', 'theme', 'onboarded', 'updatedAt']);
+      }
+    }
+  }
+}

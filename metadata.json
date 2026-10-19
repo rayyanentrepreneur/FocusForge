@@ -1,0 +1,6 @@
+{
+  "name": "FocusForge",
+  "description": "Student focus tracker to plan tasks, run distraction-free study sessions, track focus stamina, and analyze productivity.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

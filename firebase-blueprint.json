@@ -1,0 +1,222 @@
+{
+  "entities": {
+    "TaskEntity": {
+      "title": "TaskEntity",
+      "description": "Represents a student study task with subject, priority, duration, and status.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_-]+$",
+          "description": "Unique identifier of the task"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "Title of the study task"
+        },
+        "subject": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60,
+          "description": "Subject or academic topic for the task"
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["low", "medium", "high"],
+          "description": "Priority level of the task"
+        },
+        "estimatedDuration": {
+          "type": "number",
+          "description": "Estimated duration in minutes (1 to 1440)"
+        },
+        "deadline": {
+          "type": "string",
+          "maxLength": 30,
+          "description": "Optional deadline date string"
+        },
+        "completed": {
+          "type": "boolean",
+          "description": "Whether the task is completed"
+        },
+        "completedAt": {
+          "type": "string",
+          "maxLength": 50,
+          "description": "ISO timestamp when the task was marked completed"
+        },
+        "createdAt": {
+          "type": "string",
+          "maxLength": 50,
+          "description": "ISO timestamp when task was created"
+        },
+        "updatedAt": {
+          "type": "string",
+          "maxLength": 50,
+          "description": "ISO timestamp when task was last updated"
+        },
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_-]+$",
+          "description": "Firebase Auth UID of the task owner"
+        }
+      },
+      "required": ["id", "title", "subject", "priority", "estimatedDuration", "completed", "createdAt", "userId"]
+    },
+    "FocusSessionEntity": {
+      "title": "FocusSessionEntity",
+      "description": "Represents a completed focus study session or Pomodoro sprint.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_-]+$",
+          "description": "Unique identifier of the focus session"
+        },
+        "startTime": {
+          "type": "string",
+          "maxLength": 50,
+          "description": "ISO timestamp when session started"
+        },
+        "endTime": {
+          "type": "string",
+          "maxLength": 50,
+          "description": "ISO timestamp when session finished"
+        },
+        "durationMinutes": {
+          "type": "number",
+          "description": "Duration of focused study in minutes"
+        },
+        "subject": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60,
+          "description": "Subject studied during this session"
+        },
+        "taskId": {
+          "type": "string",
+          "maxLength": 128,
+          "description": "Optional linked task ID"
+        },
+        "taskTitle": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Optional linked task title"
+        },
+        "distractions": {
+          "type": "array",
+          "description": "Logged distractions during the session"
+        },
+        "completed": {
+          "type": "boolean",
+          "description": "Whether the session completed its target duration"
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["focus", "short_break", "long_break"],
+          "description": "Timer mode of the session"
+        },
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_-]+$",
+          "description": "Firebase Auth UID of session owner"
+        }
+      },
+      "required": ["id", "startTime", "endTime", "durationMinutes", "subject", "completed", "mode", "userId"]
+    },
+    "UserSettingsEntity": {
+      "title": "UserSettingsEntity",
+      "description": "User preferences, goals, and timer settings.",
+      "type": "object",
+      "properties": {
+        "studentName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60,
+          "description": "Display name of student"
+        },
+        "dailyGoalMinutes": {
+          "type": "number",
+          "description": "Target daily study goal in minutes"
+        },
+        "focusDurationMinutes": {
+          "type": "number",
+          "description": "Focus sprint duration in minutes"
+        },
+        "shortBreakMinutes": {
+          "type": "number",
+          "description": "Short break duration in minutes"
+        },
+        "longBreakMinutes": {
+          "type": "number",
+          "description": "Long break duration in minutes"
+        },
+        "longBreakInterval": {
+          "type": "number",
+          "description": "Focus sessions before long break"
+        },
+        "soundEnabled": {
+          "type": "boolean",
+          "description": "Sound chime toggle"
+        },
+        "notificationsEnabled": {
+          "type": "boolean",
+          "description": "Browser push notifications toggle"
+        },
+        "autoStartBreak": {
+          "type": "boolean",
+          "description": "Auto start break toggle"
+        },
+        "autoStartFocus": {
+          "type": "boolean",
+          "description": "Auto start focus toggle"
+        },
+        "theme": {
+          "type": "string",
+          "enum": ["dark", "light"],
+          "description": "UI theme choice"
+        },
+        "onboarded": {
+          "type": "boolean",
+          "description": "Whether onboarding has been completed"
+        },
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_-]+$",
+          "description": "Firebase Auth UID of user"
+        },
+        "updatedAt": {
+          "type": "string",
+          "maxLength": 50,
+          "description": "ISO timestamp of last update"
+        }
+      },
+      "required": ["studentName", "dailyGoalMinutes", "focusDurationMinutes", "shortBreakMinutes", "longBreakMinutes", "soundEnabled", "theme", "userId"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/tasks/{taskId}": {
+      "schema": {
+        "$ref": "TaskEntity"
+      },
+      "description": "User's study tasks, deadlines, and completion states."
+    },
+    "/users/{userId}/sessions/{sessionId}": {
+      "schema": {
+        "$ref": "FocusSessionEntity"
+      },
+      "description": "User's recorded focus sessions and Pomodoro history."
+    },
+    "/users/{userId}/settings/{settingId}": {
+      "schema": {
+        "$ref": "UserSettingsEntity"
+      },
+      "description": "User's configuration settings, study goals, and timer preferences."
+    }
+  }
+}

@@ -43,8 +43,18 @@ export const Sidebar: React.FC = () => {
             <span className="font-extrabold text-base tracking-tight text-slate-900 dark:text-white">
               Focus<span className="text-purple-600 dark:text-purple-400">Forge</span>
             </span>
-            <div className="text-[10px] text-slate-500 dark:text-slate-400 -mt-0.5 tracking-wider font-medium">
-              STUDENT FOCUS TRACKER
+            <div className="text-[10px] text-slate-500 dark:text-slate-400 -mt-0.5 tracking-wider font-medium flex items-center gap-1.5">
+              <span>STUDENT TRACKER</span>
+              <span className="text-slate-300 dark:text-slate-700">•</span>
+              <a
+                href="https://focusforge.xyz"
+                target="_blank"
+                rel="noreferrer"
+                className="text-purple-600 dark:text-purple-400 hover:underline font-mono text-[9px] lowercase font-semibold"
+                title="Official domain: focusforge.xyz"
+              >
+                focusforge.xyz
+              </a>
             </div>
           </div>
         </div>

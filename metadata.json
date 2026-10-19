@@ -1,6 +1,8 @@
 {
   "name": "FocusForge",
-  "description": "Student focus tracker to plan tasks, run distraction-free study sessions, track focus stamina, and analyze productivity.",
+  "description": "Build focus, conquer distractions, and track study stamina with smart Pomodoro sessions and cross-device sync.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }

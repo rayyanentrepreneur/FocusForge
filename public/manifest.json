@@ -1,0 +1,17 @@
+{
+  "name": "FocusForge — Student Focus & Study Tracker",
+  "short_name": "FocusForge",
+  "start_url": "https://focusforge.xyz/",
+  "scope": "https://focusforge.xyz/",
+  "display": "standalone",
+  "background_color": "#090D16",
+  "theme_color": "#8b5cf6",
+  "description": "Student focus tracker to plan tasks, run distraction-free study sessions, track focus stamina, and sync seamlessly across devices.",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
